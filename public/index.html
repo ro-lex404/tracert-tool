@@ -1,0 +1,21 @@
+const world = Globe()
+  (document.getElementById('globeViz'))
+  // Load a high-res earth texture (provided by the library creator's CDN)
+  .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+  // Pass in the data array
+  .arcsData(myTracerouteHops)
+  // Tell the globe how to read your specific data structure
+  .arcStartLat(d => d.startLat)
+  .arcStartLng(d => d.startLng)
+  .arcEndLat(d => d.endLat)
+  .arcEndLng(d => d.endLng)
+  .arcColor(d => d.color)
+  // Styling the arcs
+  .arcDashLength(0.4)
+  .arcDashGap(0.2)
+  .arcDashAnimateTime(1500) // This makes the dashed lines animate!
+  .arcStroke(0.5);
+
+// Optional: Auto-rotate the globe slowly
+world.controls().autoRotate = true;
+world.controls().autoRotateSpeed = 1.0;
