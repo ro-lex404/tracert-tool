@@ -56,6 +56,7 @@
       // Clear the globe before starting a new trace
       world.arcsData([]);
       world.labelsData([]);
+      world.pointsData([]);
       
       try {
         // Call your Node.js backend
@@ -69,15 +70,23 @@
 
         statusEl.innerText = `Trace complete! ${data.points.length} physical locations found.`;
 
-        // 3. Draw the points (IP Locations)
-        world.labelsData(data.points)
-          .labelLat(d => d.lat)
-          .labelLng(d => d.lng)
-          .labelText(d => `Hop ${d.hopNumber}: ${d.city || 'Unknown'} (${d.isp})`)
-          .labelSize(1.2)
-          .labelDotRadius(0.5)
-          .labelColor(() => 'rgba(255, 165, 0, 0.9)') // Orange dots
-          .labelResolution(2);
+        // 3. Draw the points (IP Locations) with hover tooltips and altitude stacking
+        world.pointsData(data.points)
+          .pointLat(d => d.lat)
+          .pointLng(d => d.lng)
+          // Stagger altitude based on hop number so identical locations form a vertical tower
+          .pointAltitude(d => 0.01 + (d.hopNumber * 0.015))
+          .pointRadius(0.5)
+          .pointColor(() => 'rgba(255, 165, 0, 0.9)')
+          // pointLabel creates an HTML tooltip on hover, keeping the globe visually clean
+          .pointLabel(d => `
+            <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 6px; border: 1px solid #555; color: white;">
+              <strong style="color: cyan;">Hop ${d.hopNumber}</strong><br/>
+              Location: ${d.city || 'Unknown'}, ${d.country || ''}<br/>
+              ISP: ${d.isp || 'Unknown ISP'}<br/>
+              IP: ${d.ip}
+            </div>
+          `);
 
         // 4. Draw the animated glowing arcs
         world.arcsData(data.arcs)
