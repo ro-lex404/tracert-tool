@@ -1,21 +1,101 @@
-const world = Globe()
-  (document.getElementById('globeViz'))
-  // Load a high-res earth texture (provided by the library creator's CDN)
-  .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-  // Pass in the data array
-  .arcsData(myTracerouteHops)
-  // Tell the globe how to read your specific data structure
-  .arcStartLat(d => d.startLat)
-  .arcStartLng(d => d.startLng)
-  .arcEndLat(d => d.endLat)
-  .arcEndLng(d => d.endLng)
-  .arcColor(d => d.color)
-  // Styling the arcs
-  .arcDashLength(0.4)
-  .arcDashGap(0.2)
-  .arcDashAnimateTime(1500) // This makes the dashed lines animate!
-  .arcStroke(0.5);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Traceroute Visualizer</title>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
+    
+    /* The floating UI panel */
+    #ui-container { 
+      position: absolute; top: 20px; left: 20px; z-index: 10; 
+      color: white; background: rgba(0,0,0,0.8); 
+      padding: 20px; border-radius: 8px; border: 1px solid #333; 
+    }
+    input { padding: 8px; border-radius: 4px; border: none; outline: none; margin-right: 10px; }
+    button { padding: 8px 16px; border-radius: 4px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: bold; }
+    button:hover { background: #0056b3; }
+    #status { margin-top: 12px; font-size: 0.9em; color: #aaa; }
+  </style>
+  
+  <!-- Import globe.gl -->
+  <script src="//unpkg.com/globe.gl"></script>
+</head>
+<body>
+  
+  <div id="ui-container">
+    <h3 style="margin-top: 0;">Network Traceroute</h3>
+    <input type="text" id="domainInput" placeholder="e.g., github.com" value="8.8.8.8" />
+    <button onclick="runTrace()">Trace Route</button>
+    <div id="status">Ready to trace.</div>
+  </div>
 
-// Optional: Auto-rotate the globe slowly
-world.controls().autoRotate = true;
-world.controls().autoRotateSpeed = 1.0;
+  <!-- The globe container -->
+  <div id="globeViz"></div>
+
+  <script>
+    // 1. Initialize the 3D Globe
+    const world = Globe()
+      (document.getElementById('globeViz'))
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg') // Dark mode texture
+      .pointOfView({ altitude: 2.5 });
+
+    // Rotate slowly for aesthetics
+    world.controls().autoRotate = true;
+    world.controls().autoRotateSpeed = 0.5;
+
+    // 2. The function triggered when you click "Trace Route"
+    async function runTrace() {
+      const domain = document.getElementById('domainInput').value;
+      const statusEl = document.getElementById('status');
+      
+      if (!domain) return;
+      
+      statusEl.innerText = `Executing system trace to ${domain}... (This takes a minute)`;
+      
+      // Clear the globe before starting a new trace
+      world.arcsData([]);
+      world.labelsData([]);
+      
+      try {
+        // Call your Node.js backend
+        const response = await fetch(`/api/trace/${domain}`);
+        const data = await response.json();
+        
+        if (data.error) {
+          statusEl.innerText = `Error: ${data.error}`;
+          return;
+        }
+
+        statusEl.innerText = `Trace complete! ${data.points.length} physical locations found.`;
+
+        // 3. Draw the points (IP Locations)
+        world.labelsData(data.points)
+          .labelLat(d => d.lat)
+          .labelLng(d => d.lng)
+          .labelText(d => `Hop ${d.hopNumber}: ${d.city || 'Unknown City'}`)
+          .labelSize(1.2)
+          .labelDotRadius(0.5)
+          .labelColor(() => 'rgba(255, 165, 0, 0.9)') // Orange dots
+          .labelResolution(2);
+
+        // 4. Draw the animated glowing arcs
+        world.arcsData(data.arcs)
+          .arcStartLat(d => d.startLat)
+          .arcStartLng(d => d.startLng)
+          .arcEndLat(d => d.endLat)
+          .arcEndLng(d => d.endLng)
+          .arcColor(d => d.color)
+          .arcDashLength(0.4)
+          .arcDashGap(0.2)
+          .arcDashAnimateTime(1500)
+          .arcStroke(0.6);
+
+      } catch (err) {
+        console.error(err);
+        statusEl.innerText = "Error connecting to the backend server.";
+      }
+    }
+  </script>
+</body>
+</html>
