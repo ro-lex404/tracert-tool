@@ -42,7 +42,7 @@
 
     // Rotate slowly for aesthetics
     world.controls().autoRotate = true;
-    world.controls().autoRotateSpeed = 0.5;
+    world.controls().autoRotateSpeed = 0.1;
 
     // 2. The function triggered when you click "Trace Route"
     async function runTrace() {
@@ -73,7 +73,7 @@
         world.labelsData(data.points)
           .labelLat(d => d.lat)
           .labelLng(d => d.lng)
-          .labelText(d => `Hop ${d.hopNumber}: ${d.city || 'Unknown City'}`)
+          .labelText(d => `Hop ${d.hopNumber}: ${d.city || 'Unknown'} (${d.isp})`)
           .labelSize(1.2)
           .labelDotRadius(0.5)
           .labelColor(() => 'rgba(255, 165, 0, 0.9)') // Orange dots

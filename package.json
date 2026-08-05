@@ -20,8 +20,8 @@
   },
   "homepage": "https://github.com/ro-lex404/tracert-tool#readme",
   "dependencies": {
+    "@maxmind/geoip2-node": "^7.1.0",
     "express": "^5.2.1",
-    "geoip-lite": "^1.4.10",
     "nodejs-traceroute": "^2.0.1"
   },
   "devDependencies": {
